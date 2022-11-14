@@ -13,7 +13,6 @@ export const getEmployeeList = async (
   res: express.Response,
 ) => {
   const { aptId } = req.query;
-  const employees: string[] = [];
 
   const employeeRef = await db
     .collection(aptId)
@@ -23,18 +22,16 @@ export const getEmployeeList = async (
 
   employeeRef.forEach((doc) => {
     const employee = doc.data();
-    employees.push(employee);
+    if (employee.length === 0) {
+      return res.status(200).json({
+        message: '데이터를 찾을수 없습니다',
+      });
+    } else {
+      return res.status(200).json({
+        data: employee,
+      });
+    }
   });
-
-  if (employees.length === 0) {
-    return res.status(200).json({
-      message: '데이터를 찾을수 없습니다',
-    });
-  } else {
-    return res.status(200).json({
-      data: employees,
-    });
-  }
 };
 
 export const registerEmployee = async (
