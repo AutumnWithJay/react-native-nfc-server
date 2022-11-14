@@ -41,7 +41,6 @@ export const registerEmployee = async (
   req: express.Request,
   res: express.Response,
 ) => {
-  let isExist: boolean = false;
   const employeeData: typeGuard = req.body;
   const { aptId, userId, name, phone } = employeeData;
 
@@ -52,15 +51,7 @@ export const registerEmployee = async (
     .where('userId', '==', userId)
     .get();
 
-  employeeRef.forEach((doc) => {
-    return doc.data() ? (isExist = true) : (isExist = false);
-  });
-
-  if (!!isExist) {
-    res.status(200).json({
-      message: '이미 등록되어있는 직원입니다',
-    });
-  } else {
+  if (employeeRef.empty) {
     const fbWriteResponse = await db
       .collection(aptId)
       .doc('employee')
@@ -82,6 +73,10 @@ export const registerEmployee = async (
         message: '직원 등록에 실패하였습니다',
       });
     }
+  } else {
+    return res.status(200).json({
+      message: '이미 등록되어있는 직원입니다',
+    });
   }
 };
 
