@@ -3,7 +3,7 @@ import { db } from '../util/firestore';
 
 interface typeGuard {
   aptId: string;
-  id: string;
+  userId: string;
   name: string;
   phone: string;
 }
@@ -43,14 +43,13 @@ export const registerEmployee = async (
 ) => {
   let isExist: boolean = false;
   const employeeData: typeGuard = req.body;
-  const { aptId, name, phone } = employeeData;
+  const { aptId, userId, name, phone } = employeeData;
 
   const employeeRef = await db
     .collection(aptId)
     .doc('employee')
     .collection('list')
-    .where('name', '==', name)
-    .where('phone', '==', phone)
+    .where('userId', '==', userId)
     .get();
 
   employeeRef.forEach((doc) => {
@@ -68,6 +67,7 @@ export const registerEmployee = async (
       .collection('list')
       .doc()
       .set({
+        userId,
         name,
         phone,
         registerDate: new Date(),
@@ -79,8 +79,65 @@ export const registerEmployee = async (
       });
     } else {
       res.status(400).json({
-        message: '등록에 실패하였습니다',
+        message: '직원 등록에 실패하였습니다',
       });
     }
   }
+};
+
+export const modifyEmployee = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const employeeData: typeGuard = req.body;
+  const { aptId, userId, ...data } = employeeData;
+
+  const employeeRef = await db
+    .collection(aptId)
+    .doc('employee')
+    .collection('list')
+    .where('userId', '==', userId)
+    .get();
+
+  if (employeeRef.empty) {
+    return res.status(400).json({
+      message: '존재하지 않는 직원입니다',
+    });
+  } else {
+    employeeRef.forEach(async (doc) => {
+      console.log(doc);
+      if (doc.exists) {
+        const findUser = db
+          .collection(aptId)
+          .doc('employee')
+          .collection('list')
+          .doc(doc.id);
+
+        await findUser.update({
+          ...data,
+        });
+
+        return res.status(200).json({
+          message: '정보가 업데이트 되었습니다',
+        });
+      }
+    });
+  }
+};
+
+export const removeEmployee = async (
+  req: express.Request,
+  res: express.Response,
+) => {
+  const employeeData: typeGuard = req.body;
+  const { userId } = employeeData;
+
+  const employeeRef = await db
+    .collection('employee')
+    .doc('list')
+    .collection('list')
+    .where('userId', '==', userId)
+    .get();
+
+  employeeRef.forEach((doc) => {});
 };
