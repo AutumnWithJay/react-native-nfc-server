@@ -100,7 +100,6 @@ export const modifyEmployee = async (
     });
   } else {
     employeeRef.forEach(async (doc) => {
-      console.log(doc);
       if (doc.exists) {
         const findUser = db
           .collection(aptId)
@@ -125,14 +124,34 @@ export const removeEmployee = async (
   res: express.Response,
 ) => {
   const employeeData: typeGuard = req.body;
-  const { userId } = employeeData;
+  const { aptId, userId } = employeeData;
 
   const employeeRef = await db
-    .collection('employee')
-    .doc('list')
+    .collection(aptId)
+    .doc('employee')
     .collection('list')
     .where('userId', '==', userId)
     .get();
 
-  employeeRef.forEach((doc) => {});
+  if (employeeRef.empty) {
+    return res.status(400).json({
+      message: '존재하지 않는 직원입니다',
+    });
+  } else {
+    employeeRef.forEach(async (doc) => {
+      if (doc.exists) {
+        const findUser = db
+          .collection(aptId)
+          .doc('employee')
+          .collection('list')
+          .doc(doc.id);
+
+        await findUser.delete();
+
+        return res.status(200).json({
+          message: '직원이 삭제되었습니다',
+        });
+      }
+    });
+  }
 };
