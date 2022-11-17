@@ -5,6 +5,7 @@ interface typePatrol {
   id: string;
   aptId: string;
   userId: string;
+  guardName: string;
   areaId: string;
   patrolTime: Date;
 }
@@ -21,19 +22,15 @@ export const getPatrolList = async (
     .collection('list')
     .get();
 
-  patrolListRef.forEach((doc) => {
-    const list = doc.data();
-
-    if (list.length === 0) {
-      return res.status(200).json({
-        message: '데이터를 찾을 수 없습니다',
-      });
-    } else {
-      return res.status(200).json({
-        data: list,
-      });
-    }
+  const data = patrolListRef.docs.map((doc) => {
+    const { id } = doc;
+    return {
+      id,
+      ...doc.data(),
+    };
   });
+
+  res.status(200).json(data);
 };
 
 export const getSpecificPatrol = async (
@@ -55,13 +52,14 @@ export const getSpecificPatrol = async (
       message: '해당되는 데이터가 없습니다',
     });
   } else {
-    patrolDataRef.forEach((doc) => {
-      const list = doc.data();
-
-      return res.status(200).json({
-        data: list,
-      });
+    const data = patrolDataRef.docs.map((doc) => {
+      const { id } = doc;
+      return {
+        id,
+        ...doc.data(),
+      };
     });
+    res.status(200).json(data);
   }
 };
 
@@ -70,7 +68,7 @@ export const registerPatrol = async (
   res: express.Response,
 ) => {
   const patrolData: typePatrol = req.body;
-  const { aptId, areaId, userId, patrolTime } = patrolData;
+  const { aptId, areaId, guardName, patrolTime } = patrolData;
 
   const patrolRef = await db
     .collection(aptId)

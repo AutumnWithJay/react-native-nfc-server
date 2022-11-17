@@ -1,4 +1,4 @@
-import * as express from 'express';
+import e, * as express from 'express';
 import { db } from '../util/firestore';
 
 interface typeGuard {
@@ -20,18 +20,15 @@ export const getEmployeeList = async (
     .collection('list')
     .get();
 
-  employeeRef.forEach((doc) => {
-    const employee = doc.data();
-    if (employee.length === 0) {
-      return res.status(200).json({
-        message: '데이터를 찾을수 없습니다',
-      });
-    } else {
-      return res.status(200).json({
-        data: employee,
-      });
-    }
+  const data = employeeRef.forEach((doc) => {
+    const { id } = doc;
+    return {
+      id,
+      ...doc.data(),
+    };
   });
+
+  return res.status(200).json(data);
 };
 
 export const registerEmployee = async (
